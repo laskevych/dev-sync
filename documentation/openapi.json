@@ -1,0 +1,669 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "DevSync",
+    "version": "2.22.4",
+    "description": "This project is a backend API developed using Express.js for a platform called DevSync, inspired by Stack Overflow. The API provides functionality for users to register, log in, create questions, comment, like or dislike posts, and manage various interactions within the platform."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Local server"
+    }
+  ],
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "summary": "A new journey begins — register to enter the world of knowledge.",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterUser"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User successfully registered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Access denied"
+          },
+          "400": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/api/auth/confirm-email/{confirm_token}": {
+      "get": {
+        "summary": "Confirm the truth within the digital realm.",
+        "tags": ["Authentication"],
+        "parameters": [
+          {
+            "name": "confirm_token",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Email is confirmed"
+          },
+          "401": {
+            "description": "Access denied"
+          },
+          "400": {
+            "description": "Invalid token"
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Enter the realm of wisdom, reserved for the chosen.",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginUser"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful login",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Access denied"
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "summary": "Step away from the world of knowledge, retreat into silence.",
+        "tags": ["Authentication"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User successfully logged out"
+          }
+        }
+      }
+    },
+    "/api/auth/password-reset": {
+      "post": {
+        "summary": "When memories fade, the link to restoration is sent.",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "format": "email" }
+                },
+                "required": ["email"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset link sent"
+          },
+          "404": {
+            "description": "User with this email not found"
+          }
+        }
+      }
+    },
+    "/api/auth/password-reset/{confirm_token}": {
+      "post": {
+        "summary": "Renewed strength for your password, granted through hope’s token.",
+        "tags": ["Authentication"],
+        "parameters": [
+          {
+            "name": "confirm_token",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "password": { "type": "string" },
+                  "password_confirm": { "type": "string" }
+                },
+                "required": ["password", "password_confirm"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password successfully updated"
+          },
+          "400": {
+            "description": "Invalid token"
+          }
+        }
+      }
+    },
+    "/api/users": {
+      "get": {
+        "summary": "A world of faces, all reaching for wisdom.",
+        "tags": ["Users"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/User" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new spark of knowledge (admin only).",
+        "tags": ["Users"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUser"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User successfully created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied"
+          }
+        }
+      }
+    },
+    "/api/users/{user_id}": {
+      "get": {
+        "summary": "Gaze upon one sage among many.",
+        "tags": ["Users"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User data",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/User" }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Refine the wisdom of a user.",
+        "tags": ["Users"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateUser" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User data updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/User" }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Farewell to a voice of wisdom (admin only).",
+        "tags": ["Users"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User successfully deleted"
+          },
+          "403": {
+            "description": "Access denied"
+          }
+        }
+      }
+    },
+    "/api/users/avatar": {
+      "patch": {
+        "summary": "Add a face to your journey’s story.",
+        "tags": ["Users"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "avatar": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": ["profilePicture"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Avatar successfully uploaded",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/User" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/posts": {
+      "get": {
+        "summary": "A chronicle of thoughts — all posts await your gaze.",
+        "tags": ["Posts"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "default": 1 }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["active", "inactive"] }
+          },
+          {
+            "name": "categories",
+            "in": "query",
+            "schema": { "type": "string", "example": "1,2,3,4,5" }
+          },
+          {
+            "name": "isTop",
+            "in": "query",
+            "schema": { "type": "integer", "example": "1" }
+          },
+          {
+            "name": "createdAtFrom",
+            "in": "query",
+            "schema": { "type": "string", "format": "date", "example": "2024-09-15" }
+          },
+          {
+            "name": "createdAtTo",
+            "in": "query",
+            "schema": { "type": "string", "format": "date", "example": "2024-10-12" }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["createdAt", "createdAt-desc", "likes", "likes-desc"] }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of posts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Post" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Birth a new thought to light the world.",
+        "tags": ["Posts"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreatePost" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Post successfully created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Post" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/posts/{post_id}": {
+      "get": {
+        "summary": "Glimpse into a single tale of enlightenment.",
+        "tags": ["Posts"],
+        "parameters": [
+          {
+            "name": "post_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Post data",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Post" }
+              }
+            }
+          },
+          "404": {
+            "description": "Post not found"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "login": { "type": "string" },
+          "fullName": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "isEmailVerified": { "type": "boolean", "example": false },
+          "profilePicture": { "type": "string", "example": "default.png"  },
+          "rating": { "type": "integer" },
+          "role": { "type": "string", "enum": ["user", "admin"] },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "RegisterUser": {
+        "type": "object",
+        "properties": {
+          "login": { "type": "string" },
+          "password": { "type": "string" },
+          "password_confirmation": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "fullName": { "type": "string" }
+        },
+        "required": ["login", "password", "password_confirmation", "email"]
+      },
+      "LoginUser": {
+        "type": "object",
+        "properties": {
+          "login": { "type": "string" },
+          "password": { "type": "string" }
+        },
+        "required": ["login", "password"]
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string", "example": "Login success."},
+          "accessToken": { "type": "string" }
+        }
+      },
+      "CreateUser": {
+        "type": "object",
+        "properties": {
+          "login": { "type": "string" },
+          "password": { "type": "string" },
+          "password_confirmation": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "role": { "type": "string", "enum": ["user", "admin"] },
+          "fullName": { "type": "string" }
+        },
+        "required": ["login", "password", "password_confirmation", "email", "role"]
+      },
+      "CreateLike": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "enum": ["like", "dislike"], "example": "like" }
+        },
+        "required": ["type"]
+      },
+      "UpdateUser": {
+        "type": "object",
+        "properties": {
+          "fullName": { "type": "string" },
+          "password": { "type": "string", "format": "email" },
+          "password_confirmation": { "type": "string" }
+        }
+      },
+      "Post": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "title": { "type": "string" },
+          "content": { "type": "string" },
+          "status": { "type": "string", "enum": ["active", "inactive"] },
+          "isTop": { "type": "boolean" },
+          "likes": { "type": "integer" },
+          "createdById": { "type": "integer" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "categories": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Category" }
+          }
+        }
+      },
+      "CreatePost": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "content": { "type": "string" },
+          "categories": {
+            "type": "array",
+            "items": { "type": "integer" }
+          }
+        },
+        "required": ["title", "content", "categories"]
+      },
+      "UpdatePost": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "content": { "type": "string" },
+          "categories": {
+            "type": "array",
+            "items": { "type": "integer" }
+          }
+        }
+      },
+      "Category": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "CreateCategory": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "description": { "type": "string" }
+        },
+        "required": ["title"]
+      },
+      "UpdateCategory": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      },
+      "Comment": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "postId": { "type": "integer" },
+          "createdById": { "type": "integer" },
+          "content": { "type": "string" },
+          "isBest": { "type": "boolean" },
+          "status": { "type": "string", "enum": ["active", "inactive"] },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "CreateComment": {
+        "type": "object",
+        "properties": {
+          "content": { "type": "string" }
+        },
+        "required": ["content"]
+      },
+      "UpdateComment": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "enum": ["active", "inactive"] }
+        }
+      },
+      "Like": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "createdById": { "type": "integer" },
+          "postId": { "type": "integer" },
+          "commentId": { "type": "integer" },
+          "type": { "type": "string", "enum": ["like", "dislike"] },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}
